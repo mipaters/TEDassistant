@@ -9,11 +9,11 @@ export const architectureNodes = [
       "The subscriber's phone places or receives a call on the Rogers network — the entry point for every TED interaction.",
   },
   {
-    id: "twilio",
+    id: "acs",
     icon: PhoneCall,
-    title: "Twilio Voice",
+    title: "Azure Communication Services",
     description:
-      "Programmable Voice intercepts and routes the call, streaming real-time audio to the orchestration layer.",
+      "Azure Communication Services Call Automation intercepts and routes the call, streaming real-time audio to the orchestration layer.",
   },
   {
     id: "functions",

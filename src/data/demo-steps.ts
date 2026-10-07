@@ -7,14 +7,16 @@ export interface DemoStep {
 }
 
 export const demoSteps: DemoStep[] = [
-  { id: "home", label: "Home", href: "/home", durationMs: 20_000 },
-  { id: "call-concierge", label: "Call Concierge", href: "/call-concierge", durationMs: 45_000 },
-  { id: "scam-protection", label: "Scam Protection", href: "/scam-protection", durationMs: 45_000 },
-  { id: "package-delivery", label: "Package Delivery", href: "/call-concierge?scenario=delivery", durationMs: 30_000 },
-  { id: "family-safety", label: "Family Safety", href: "/family-safety", durationMs: 30_000 },
-  { id: "travel-assistant", label: "Travel Assistant", href: "/travel-assistant", durationMs: 30_000 },
-  { id: "subscription-advisor", label: "Subscription Advisor", href: "/subscription-advisor", durationMs: 30_000 },
-  { id: "why-rogers", label: "Why Rogers", href: "/why-rogers", durationMs: 45_000 },
-  { id: "architecture", label: "Architecture", href: "/architecture", durationMs: 45_000 },
-  { id: "dashboard", label: "Dashboard", href: "/home", anchor: "kpi-dashboard", durationMs: 30_000 },
+  { id: "landing", label: "Welcome", href: "/", durationMs: 15_000 },
+  { id: "app-home", label: "TED App Home", href: "/app/home", durationMs: 20_000 },
+  { id: "call-concierge", label: "Call Concierge", href: "/app/calls?tab=appointment", durationMs: 40_000 },
+  { id: "scam-protection", label: "Scam Protection", href: "/app/calls?tab=scam", durationMs: 40_000 },
+  { id: "package-delivery", label: "Package Delivery", href: "/app/calls?tab=delivery", durationMs: 25_000 },
+  { id: "family-safety", label: "Family Safety", href: "/app/family", durationMs: 30_000 },
+  { id: "travel-assistant", label: "Travel Assistant", href: "/app/travel", durationMs: 30_000 },
+  { id: "subscription-advisor", label: "Subscription Advisor", href: "/app/subscriptions", durationMs: 30_000 },
+  { id: "chat-with-ted", label: "Chat with TED", href: "/app/chat", durationMs: 30_000 },
+  { id: "why-rogers", label: "Why Rogers", href: "/internal/why-rogers", durationMs: 45_000 },
+  { id: "architecture", label: "Architecture", href: "/internal/architecture", durationMs: 45_000 },
+  { id: "dashboard", label: "Dashboard", href: "/internal/dashboard", durationMs: 30_000 },
 ];

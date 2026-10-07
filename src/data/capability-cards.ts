@@ -1,4 +1,4 @@
-import { PhoneCall, ShieldAlert, Users, Plane, Wallet, Network } from "lucide-react";
+import { PhoneCall, ShieldAlert, Users, Plane, Wallet, MessageCircle } from "lucide-react";
 
 export const capabilityCards = [
   {
@@ -7,7 +7,7 @@ export const capabilityCards = [
     description:
       "TED answers unknown calls, understands intent, and resolves routine requests like appointment confirmations without interrupting you.",
     icon: PhoneCall,
-    href: "/call-concierge",
+    href: "/app/calls?tab=appointment",
   },
   {
     id: "scam-protection",
@@ -15,7 +15,7 @@ export const capabilityCards = [
     description:
       "Real-time conversational analysis detects social engineering and urgency tactics, scoring and blocking fraud before it reaches you.",
     icon: ShieldAlert,
-    href: "/scam-protection",
+    href: "/app/calls?tab=scam",
   },
   {
     id: "family-safety",
@@ -23,7 +23,7 @@ export const capabilityCards = [
     description:
       "TED recognizes trusted institutions like schools and escalates urgent, high-priority calls directly to you — instantly.",
     icon: Users,
-    href: "/family-safety",
+    href: "/app/family",
   },
   {
     id: "travel-assistant",
@@ -31,7 +31,7 @@ export const capabilityCards = [
     description:
       "Flying tomorrow? TED proactively prepares roaming plans, flight status, reminders, weather, and currency guidance.",
     icon: Plane,
-    href: "/travel-assistant",
+    href: "/app/travel",
   },
   {
     id: "subscription-advisor",
@@ -39,14 +39,14 @@ export const capabilityCards = [
     description:
       "TED audits streaming and service subscriptions, flags unused spend, and recommends savings opportunities automatically.",
     icon: Wallet,
-    href: "/subscription-advisor",
+    href: "/app/subscriptions",
   },
   {
-    id: "network-intelligence",
-    title: "Network Intelligence",
+    id: "chat-with-ted",
+    title: "Chat with TED",
     description:
-      "Built on Rogers' network, device trust, and SIM verification signals — advantages no over-the-top assistant can replicate.",
-    icon: Network,
-    href: "/architecture",
+      "Ask TED to schedule service, improve your plan, or compare providers — and it gets the work done for you.",
+    icon: MessageCircle,
+    href: "/app/chat",
   },
 ];

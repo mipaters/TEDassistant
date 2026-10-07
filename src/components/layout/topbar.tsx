@@ -4,7 +4,7 @@ import * as React from "react";
 import { usePathname } from "next/navigation";
 import { Menu, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { navItems } from "@/data/nav-items";
+import { internalNavItems as navItems } from "@/data/internal-nav-items";
 import { useDemoMode } from "@/context/demo-mode-context";
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {

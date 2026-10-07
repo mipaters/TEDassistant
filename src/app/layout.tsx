@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AppShell } from "@/components/layout/app-shell";
+import { DemoModeProvider } from "@/context/demo-mode-context";
+import { DemoModeBar } from "@/components/layout/demo-mode-bar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,7 +24,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}>
       <body className="min-h-full">
-        <AppShell>{children}</AppShell>
+        <DemoModeProvider>
+          {children}
+          <DemoModeBar />
+        </DemoModeProvider>
       </body>
     </html>
   );
