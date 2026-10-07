@@ -7,7 +7,7 @@ export const capabilityCards = [
     description:
       "TED answers unknown calls, understands intent, and resolves routine requests like appointment confirmations without interrupting you.",
     icon: PhoneCall,
-    href: "/app/calls?tab=appointment",
+    href: "/app/calls?tab=concierge",
   },
   {
     id: "scam-protection",
