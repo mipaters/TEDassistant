@@ -57,9 +57,24 @@ export function ConsumerShell({ children }: { children: React.ReactNode }) {
             aria-label="Chat with TED"
           >
             <MessageCircle
-              className={cn("h-5 w-5", chatActive ? "text-[var(--rogers-red-bright)]" : "text-white/40")}
+              className={cn("h-5 w-5", chatActive ? "text-white" : "text-[var(--rogers-red-bright)]")}
+              style={
+                !chatActive
+                  ? {
+                      filter:
+                        "drop-shadow(0 0 4px rgba(224,17,95,0.65))",
+                    }
+                  : undefined
+              }
             />
-            <span className={cn("text-[10px]", chatActive ? "text-white" : "text-white/40")}>TED</span>
+            <span
+              className={cn(
+                "font-semibold text-[10px]",
+                chatActive ? "text-white" : "text-[var(--rogers-red-bright)]"
+              )}
+            >
+              TED
+            </span>
           </Link>
 
           {consumerTabs.slice(2).map((tab) => (
