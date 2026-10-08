@@ -46,26 +46,20 @@ export function ConsumerShell({ children }: { children: React.ReactNode }) {
 
         <div className="min-h-[600px] flex-1 overflow-y-auto px-4 pb-24 pt-2">{children}</div>
 
-        <div className="absolute inset-x-0 bottom-0 flex items-end justify-around border-t border-white/10 bg-[#0b0f1a]/95 px-1 py-2.5 backdrop-blur-xl">
+        <div className="absolute inset-x-0 bottom-0 flex items-center justify-around border-t border-white/10 bg-[#0b0f1a]/95 px-1 py-2.5 backdrop-blur-xl">
           {consumerTabs.slice(0, 2).map((tab) => (
             <NavTabLink key={tab.href} tab={tab} pathname={pathname} />
           ))}
 
           <Link
             href="/app/chat"
-            className="relative -top-5 flex flex-col items-center gap-1 px-2"
+            className="flex flex-col items-center gap-1 px-2 py-1"
             aria-label="Chat with TED"
           >
-            <span
-              className={cn(
-                "flex items-center justify-center rounded-full bg-gradient-to-br from-[var(--rogers-red-bright)] to-[var(--ted-violet)] text-white shadow-lg shadow-[rgba(224,17,95,0.45)] ring-4 ring-[#0b0f1a]",
-                chatActive && "ring-[var(--rogers-red-bright)]/60"
-              )}
-              style={{ height: "3.25rem", width: "3.25rem" }}
-            >
-              <MessageCircle className="h-6 w-6" />
-            </span>
-            <span className={cn("text-[10px]", chatActive ? "text-white" : "text-white/60")}>TED</span>
+            <MessageCircle
+              className={cn("h-5 w-5", chatActive ? "text-[var(--rogers-red-bright)]" : "text-white/40")}
+            />
+            <span className={cn("text-[10px]", chatActive ? "text-white" : "text-white/40")}>TED</span>
           </Link>
 
           {consumerTabs.slice(2).map((tab) => (
