@@ -80,4 +80,44 @@ export const chatPrompts: ChatExchange[] = [
       doneLabel: "Loyalty credit applied",
     },
   },
+  {
+    id: "concert-tickets",
+    prompt: "Can you get me tickets to the Backstreet Boys concert at Rogers Stadium?",
+    tedReplies: [
+      "Checking available seats at Rogers Stadium for the Backstreet Boys show…",
+      "Found two seats in Section 112, Row J — your Rogers loyalty discount applies at checkout.",
+      "Purchasing now and adding the tickets to your mobile wallet…",
+    ],
+    actionCard: {
+      title: "Tickets Purchased",
+      detail: "Backstreet Boys · Rogers Stadium · Section 112, Row J",
+      items: [
+        { label: "Seats", value: "2 (Row J)" },
+        { label: "Price", value: "$333.00 after loyalty discount", tone: "success" },
+        { label: "Delivery", value: "Added to mobile wallet", tone: "success" },
+      ],
+      cta: "View Tickets",
+      doneLabel: "Tickets added to wallet",
+    },
+  },
+  {
+    id: "highlight-reel",
+    prompt: "Can you put together Auston Matthews highlights from last night's game and text me a video?",
+    tedReplies: [
+      "Pulling last night's Maple Leafs broadcast from Sportsnet…",
+      "Found 3 Auston Matthews highlights — 2 goals and a highlight-reel assist.",
+      "Editing a 45-second reel now and sending it straight to your phone.",
+    ],
+    actionCard: {
+      title: "Highlight Reel Sent",
+      detail: "Auston Matthews · Maple Leafs · Sportsnet",
+      items: [
+        { label: "Clips", value: "3 highlights (2 goals, 1 assist)" },
+        { label: "Length", value: "0:45" },
+        { label: "Delivery", value: "Sent via text message", tone: "success" },
+      ],
+      cta: "Watch Again",
+      doneLabel: "Video sent",
+    },
+  },
 ];
