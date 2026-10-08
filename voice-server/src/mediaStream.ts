@@ -65,40 +65,51 @@ export function handleMediaStreamConnection(ws: WebSocket) {
   }
 
   ws.on("message", (raw: RawData) => {
-    let msg: TwilioStreamMessage;
+    // Never let a single call's error crash the whole process — that would
+    // drop every other in-progress call too.
     try {
-      msg = JSON.parse(raw.toString());
-    } catch {
-      return;
-    }
+      let msg: TwilioStreamMessage;
+      try {
+        msg = JSON.parse(raw.toString());
+      } catch {
+        return;
+      }
 
-    switch (msg.event) {
-      case "start": {
-        streamSid = msg.start?.streamSid;
-        callSid = msg.start?.callSid;
-        console.log(`[media-stream] call started: ${callSid} / ${streamSid}`);
-        speechSession = new SpeechSession(
-          (text) => void handleCallerUtterance(text),
-          (err) => console.error("[media-stream] recognition error:", err)
-        );
-        speechSession.start();
-        void speak(config.greeting);
-        break;
+      switch (msg.event) {
+        case "start": {
+          streamSid = msg.start?.streamSid;
+          callSid = msg.start?.callSid;
+          console.log(`[media-stream] call started: ${callSid} / ${streamSid}`);
+          speechSession = new SpeechSession(
+            (text) => void handleCallerUtterance(text),
+            (err) => console.error("[media-stream] recognition error:", err)
+          );
+          speechSession.start();
+          void speak(config.greeting);
+          break;
+        }
+        case "media": {
+          if (!speechSession || !msg.media) return;
+          const payload = Buffer.from(msg.media.payload, "base64");
+          speechSession.writePcm16(muLawBufferToPcm16(payload));
+          break;
+        }
+        case "stop": {
+          console.log(`[media-stream] call ended: ${callSid}`);
+          speechSession?.close();
+          ws.close();
+          break;
+        }
+        default:
+          break;
       }
-      case "media": {
-        if (!speechSession || !msg.media) return;
-        const payload = Buffer.from(msg.media.payload, "base64");
-        speechSession.writePcm16(muLawBufferToPcm16(payload));
-        break;
-      }
-      case "stop": {
-        console.log(`[media-stream] call ended: ${callSid}`);
-        speechSession?.close();
+    } catch (err) {
+      console.error("[media-stream] unhandled error processing message:", err);
+      try {
         ws.close();
-        break;
+      } catch {
+        // ignore
       }
-      default:
-        break;
     }
   });
 
