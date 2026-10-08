@@ -1,0 +1,13 @@
+{
+  "routes": [
+    { "route": "/home", "redirect": "/app/home/" },
+    { "route": "/call-concierge", "redirect": "/app/calls/" },
+    { "route": "/scam-protection", "redirect": "/app/calls/?tab=scam" },
+    { "route": "/family-safety", "redirect": "/app/family/" },
+    { "route": "/travel-assistant", "redirect": "/app/travel/" },
+    { "route": "/subscription-advisor", "redirect": "/app/subscriptions/" },
+    { "route": "/why-rogers", "redirect": "/internal/why-rogers/" },
+    { "route": "/architecture", "redirect": "/internal/architecture/" }
+  ],
+  "trailingSlash": "always"
+}

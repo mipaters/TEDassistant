@@ -1,19 +1,14 @@
 import type { NextConfig } from "next";
 
+// Deployed as a static export (Azure Static Web Apps free tier has no Node
+// server to run). Legacy top-level route redirects (e.g. /home -> /app/home)
+// can't be expressed with next.config's `redirects()` in static-export mode,
+// so they're handled instead by the `routes` block in
+// public/staticwebapp.config.json, which Azure Static Web Apps serves at the
+// host level.
 const nextConfig: NextConfig = {
-  /* config options here */
-  async redirects() {
-    return [
-      { source: "/home", destination: "/app/home", permanent: false },
-      { source: "/call-concierge", destination: "/app/calls", permanent: false },
-      { source: "/scam-protection", destination: "/app/calls?tab=scam", permanent: false },
-      { source: "/family-safety", destination: "/app/family", permanent: false },
-      { source: "/travel-assistant", destination: "/app/travel", permanent: false },
-      { source: "/subscription-advisor", destination: "/app/subscriptions", permanent: false },
-      { source: "/why-rogers", destination: "/internal/why-rogers", permanent: false },
-      { source: "/architecture", destination: "/internal/architecture", permanent: false },
-    ];
-  },
+  output: "export",
+  trailingSlash: true,
 };
 
 export default nextConfig;
