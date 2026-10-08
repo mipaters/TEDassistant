@@ -19,9 +19,9 @@ export const capabilityCards = [
   },
   {
     id: "family-safety",
-    title: "Family Safety",
+    title: "Family Services",
     description:
-      "TED recognizes trusted institutions like schools and escalates urgent, high-priority calls directly to you — instantly.",
+      "TED manages Wi-Fi schedules, content filtering, calendar alerts, and reminders — coordinating directly with Rogers and your family calendar.",
     icon: Users,
     href: "/app/family",
   },

@@ -25,7 +25,26 @@ export interface CalendarEvent {
   date: string;
   time: string;
   location?: string;
-  category: "medical" | "school" | "travel" | "personal" | "delivery";
+  category: "medical" | "school" | "sports" | "travel" | "personal" | "delivery";
+}
+
+export interface ChildDevice {
+  id: string;
+  ownerId: string; // FamilyMember id
+  deviceName: string;
+  deviceType: "Phone" | "Tablet" | "Gaming Console";
+  wifiScheduleEnabled: boolean;
+  wifiSchedule: string; // preset label, e.g. "School Hours (7am–3pm)"
+  contentFilterLevel: "off" | "standard" | "strict";
+}
+
+export interface FamilyReminder {
+  id: string;
+  recipientId: string; // FamilyMember id
+  message: string;
+  time: string;
+  recurrence: string;
+  enabled: boolean;
 }
 
 export interface CallHistoryItem {
@@ -89,6 +108,26 @@ export const calendarEvents: CalendarEvent[] = [
   { id: "cal-3", title: "Emma: Parent-teacher conference", date: "2025-10-09", time: "4:00 PM", location: "Elmwood Middle School", category: "school" },
   { id: "cal-4", title: "Flight to Barcelona", date: "2025-10-08", time: "6:45 AM", location: "Toronto Pearson (YYZ)", category: "travel" },
   { id: "cal-5", title: "Family dinner", date: "2025-10-10", time: "6:30 PM", category: "personal" },
+  { id: "cal-6", title: "Noah: Soccer game", date: "2025-10-11", time: "9:00 AM", location: "Elmwood Community Park", category: "sports" },
+  { id: "cal-7", title: "Noah: Pediatrician check-up", date: "2025-10-14", time: "1:15 PM", location: "Elmwood Family Health Clinic", category: "medical" },
+];
+
+export const childDevices: ChildDevice[] = [
+  { id: "dev-1", ownerId: "fam-3", deviceName: "Emma's iPhone 13", deviceType: "Phone", wifiScheduleEnabled: false, wifiSchedule: "All Day", contentFilterLevel: "standard" },
+  { id: "dev-2", ownerId: "fam-4", deviceName: "Noah's iPad mini", deviceType: "Tablet", wifiScheduleEnabled: true, wifiSchedule: "School Hours (7am–3pm)", contentFilterLevel: "strict" },
+  { id: "dev-3", ownerId: "fam-4", deviceName: "Noah's Xbox Series S", deviceType: "Gaming Console", wifiScheduleEnabled: true, wifiSchedule: "Evenings Only (4pm–8pm)", contentFilterLevel: "standard" },
+];
+
+export const wifiSchedulePresets = [
+  "All Day",
+  "School Hours (7am–3pm)",
+  "Evenings Only (4pm–8pm)",
+  "Paused",
+];
+
+export const familyReminders: FamilyReminder[] = [
+  { id: "rem-1", recipientId: "fam-3", message: "I'm picking you up from school at 4:30 PM today.", time: "4:30 PM", recurrence: "Weekdays", enabled: true },
+  { id: "rem-2", recipientId: "fam-4", message: "Don't forget your soccer cleats for practice tonight.", time: "3:00 PM", recurrence: "Tue & Thu", enabled: true },
 ];
 
 export const callHistory: CallHistoryItem[] = [
