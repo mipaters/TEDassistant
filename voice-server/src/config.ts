@@ -4,6 +4,9 @@ export interface VoiceServerConfig {
   port: number;
   publicHostname: string | undefined; // e.g. "ted-voice.azurewebsites.net" (no protocol)
   twilioAuthToken: string | undefined;
+  twilioAccountSid: string | undefined;
+  twilioFromNumber: string | undefined; // the Twilio number itself, e.g. "+12898141439"
+  defaultSarahPhoneNumber: string | undefined;
   validateTwilioSignature: boolean;
   azureOpenAI: {
     endpoint: string | undefined;
@@ -28,6 +31,9 @@ export const config: VoiceServerConfig = {
   port: Number(process.env.PORT ?? 8080),
   publicHostname: process.env.PUBLIC_HOSTNAME,
   twilioAuthToken: process.env.TWILIO_AUTH_TOKEN,
+  twilioAccountSid: process.env.TWILIO_ACCOUNT_SID,
+  twilioFromNumber: process.env.TWILIO_FROM_NUMBER,
+  defaultSarahPhoneNumber: process.env.SARAH_PHONE_NUMBER,
   // Defaults to validating signatures whenever a Twilio auth token is present,
   // but can be forced off (e.g. for local ngrok testing without a token).
   validateTwilioSignature: bool(process.env.VALIDATE_TWILIO_SIGNATURE, Boolean(process.env.TWILIO_AUTH_TOKEN)),

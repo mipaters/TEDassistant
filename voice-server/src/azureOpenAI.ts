@@ -42,3 +42,38 @@ export async function getPhoneReply(history: PhoneTurn[]): Promise<string> {
   };
   return data.choices?.[0]?.message?.content?.trim() || "Sorry, could you say that again?";
 }
+
+const SUMMARY_SYSTEM_PROMPT = `You write short SMS text message summaries of phone calls that TED (an AI assistant)
+just handled on behalf of Sarah Thompson. Summarize who called and what happened/was decided in ONE short sentence,
+under 160 characters, in plain text (no markdown, no quotes). Start with "TED: " and do not mention that this is a
+summary or that you are an AI.`;
+
+/**
+ * Produces a short SMS-ready summary of a completed call for Sarah, once TED
+ * has handled it end-to-end without needing to escalate.
+ */
+export async function getCallSummary(history: PhoneTurn[]): Promise<string> {
+  if (!isAzureOpenAIConfigured()) {
+    return "TED: Handled a call for you. (Summary unavailable — Azure OpenAI not configured.)";
+  }
+
+  const { endpoint, apiKey, deployment, apiVersion } = config.azureOpenAI;
+  const url = `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
+  const messages: PhoneTurn[] = [{ role: "system", content: SUMMARY_SYSTEM_PROMPT }, ...history];
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "api-key": apiKey as string },
+    body: JSON.stringify({ messages, temperature: 0.3, max_tokens: 80 }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Azure OpenAI summary request failed: ${res.status} ${text}`);
+  }
+
+  const data = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  return data.choices?.[0]?.message?.content?.trim() || "TED: Handled a call for you.";
+}
