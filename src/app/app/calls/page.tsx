@@ -3,11 +3,9 @@
 import * as React from "react";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { PhoneIncoming, ShieldAlert, Play } from "lucide-react";
-import Link from "next/link";
+import { PhoneIncoming, ShieldAlert, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -103,12 +101,23 @@ function ConciergeSettings() {
         </CardContent>
       </Card>
 
-      <Link href="/app/demo/call-concierge">
-        <Button variant="secondary" className="w-full justify-center">
-          <Play className="h-3.5 w-3.5" />
-          See a live example
-        </Button>
-      </Link>
+      <Card className="border-[var(--ted-blue)]/30 bg-[var(--ted-blue)]/5">
+        <CardContent className="flex items-center gap-3 p-5">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--ted-blue)]/15 text-[var(--ted-blue)]">
+            <Phone className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-sm font-medium">Try it yourself</p>
+            <p className="text-xs text-muted-foreground">
+              Call{" "}
+              <a href="tel:+12898141439" className="font-medium text-white underline underline-offset-2">
+                +1 (289) 814-1439
+              </a>{" "}
+              to test TED&apos;s call concierge live.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -198,12 +207,23 @@ function ScamSettings() {
         </CardContent>
       </Card>
 
-      <Link href="/app/demo/scam-protection">
-        <Button variant="secondary" className="w-full justify-center">
-          <Play className="h-3.5 w-3.5" />
-          See a live example
-        </Button>
-      </Link>
+      <Card className="border-[var(--ted-blue)]/30 bg-[var(--ted-blue)]/5">
+        <CardContent className="flex items-center gap-3 p-5">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--ted-blue)]/15 text-[var(--ted-blue)]">
+            <Phone className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-sm font-medium">Try it yourself</p>
+            <p className="text-xs text-muted-foreground">
+              Call{" "}
+              <a href="tel:+12898141439" className="font-medium text-white underline underline-offset-2">
+                +1 (289) 814-1439
+              </a>{" "}
+              to test TED&apos;s scam protection live.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
