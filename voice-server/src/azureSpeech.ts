@@ -90,3 +90,37 @@ export function synthesizeSpeech(text: string): Promise<Int16Array> {
     );
   });
 }
+
+/**
+ * Synthesizes text to an MP3 buffer using TED's configured voice, for direct
+ * playback in a browser `<audio>` element (used by the website's Chat with
+ * TED experience — distinct from the telephony path above, which needs raw
+ * 8kHz PCM for Twilio's µ-law encoding instead).
+ */
+export function synthesizeSpeechMp3(text: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    if (!isAzureSpeechConfigured()) {
+      reject(new Error("Azure AI Speech is not configured (AZURE_SPEECH_KEY / AZURE_SPEECH_REGION)."));
+      return;
+    }
+    const sc = sdk.SpeechConfig.fromSubscription(config.azureSpeech.key as string, config.azureSpeech.region as string);
+    sc.speechSynthesisVoiceName = config.azureSpeech.voice;
+    sc.speechSynthesisOutputFormat = sdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
+    const synthesizer = new sdk.SpeechSynthesizer(sc);
+    synthesizer.speakTextAsync(
+      text,
+      (result) => {
+        synthesizer.close();
+        if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
+          resolve(Buffer.from(result.audioData));
+        } else {
+          reject(new Error(`Speech synthesis failed: ${result.errorDetails ?? result.reason}`));
+        }
+      },
+      (error) => {
+        synthesizer.close();
+        reject(new Error(String(error)));
+      }
+    );
+  });
+}

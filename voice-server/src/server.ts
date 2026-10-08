@@ -7,6 +7,8 @@ import { config, isAzureOpenAIConfigured, isAzureSpeechConfigured } from "./conf
 import { handleTwilioVoiceWebhook } from "./twilioVoice";
 import { handleMediaStreamConnection } from "./mediaStream";
 import { getSarahPhoneNumber, setSarahPhoneNumber, normalizePhoneNumber, getTrustedContacts, addTrustedContact, removeTrustedContact } from "./demoConfig";
+import { getWebChatReply, type WebChatTurn } from "./chat";
+import { synthesizeSpeechMp3 } from "./azureSpeech";
 
 // A crash in one call's handling must never take down calls in progress for
 // everyone else. Log and keep the process alive.
@@ -68,6 +70,45 @@ app.post("/api/trusted-contacts", (req, res) => {
 app.delete("/api/trusted-contacts/:id", (req, res) => {
   removeTrustedContact(req.params.id);
   res.json({ ok: true });
+});
+
+app.post("/api/chat", async (req, res) => {
+  const message = typeof req.body?.message === "string" ? req.body.message.trim() : "";
+  const rawHistory: unknown[] = Array.isArray(req.body?.history) ? req.body.history : [];
+  if (!message) {
+    res.status(400).json({ error: "Please provide a message." });
+    return;
+  }
+  const history: WebChatTurn[] = rawHistory
+    .filter((t: unknown): t is { role: string; content: string } => {
+      const turn = t as { role?: unknown; content?: unknown };
+      return (turn.role === "user" || turn.role === "assistant") && typeof turn.content === "string";
+    })
+    .map((t) => ({ role: t.role as "user" | "assistant", content: t.content }));
+
+  try {
+    const reply = await getWebChatReply(history, message);
+    res.json({ reply });
+  } catch (err) {
+    console.error("[ted-voice-server] /api/chat failed:", err);
+    res.status(502).json({ error: "TED's chat service is temporarily unavailable." });
+  }
+});
+
+app.post("/api/speak", async (req, res) => {
+  const text = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+  if (!text) {
+    res.status(400).json({ error: "Please provide text to speak." });
+    return;
+  }
+  try {
+    const mp3 = await synthesizeSpeechMp3(text);
+    res.set("Content-Type", "audio/mpeg");
+    res.send(mp3);
+  } catch (err) {
+    console.error("[ted-voice-server] /api/speak failed:", err);
+    res.status(502).json({ error: "TED's voice service is temporarily unavailable." });
+  }
 });
 
 app.post("/twilio/voice", (req, res) => {

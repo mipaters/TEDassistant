@@ -2,38 +2,128 @@
 
 import * as React from "react";
 
-/**
- * Placeholder voice-session state for TED's chat experience.
- *
- * This intentionally does not talk to any speech service yet — it only
- * manages the on/off (and "persistent until you turn it off") lifecycle
- * the UI needs. Swap the no-op `start`/`stop` effects below for real
- * Azure AI Speech (STT) + Azure OpenAI Realtime/Speech (TTS) calls once
- * those are wired up; the public shape of this hook (`enabled`,
- * `listening`, `toggle`) is designed to stay stable across that change.
- */
-export function useTedVoice() {
-  const [enabled, setEnabled] = React.useState(false);
+type SpeechRecognitionResultLike = {
+  isFinal: boolean;
+  0: { transcript: string };
+};
 
-  // "listening" is split from "enabled" so a future real implementation
-  // can briefly show enabled-but-not-yet-listening while a mic permission
-  // prompt or connection handshake is in flight.
+type SpeechRecognitionEventLike = {
+  resultIndex: number;
+  results: ArrayLike<SpeechRecognitionResultLike>;
+};
+
+interface SpeechRecognitionLike extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: unknown) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+
+function getSpeechRecognitionCtor(): SpeechRecognitionConstructor | null {
+  if (typeof window === "undefined") return null;
+  const w = window as typeof window & {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+}
+
+/**
+ * Live voice-session state for TED's chat experience.
+ *
+ * Speech-to-text runs entirely in the browser via the Web Speech API (no
+ * server round-trip needed, and no additional Azure cost) — supported in
+ * Chrome and Edge. When a sentence is finalized, `onUtterance` fires with the
+ * recognized text so the caller can send it to TED and speak the reply back
+ * (e.g. via the voice-server's Azure AI Speech-backed `/api/speak` endpoint).
+ */
+export function useTedVoice(onUtterance: (text: string) => void) {
+  const [enabled, setEnabled] = React.useState(false);
   const [listening, setListening] = React.useState(false);
+  const [supported, setSupported] = React.useState(true);
+  const recognitionRef = React.useRef<SpeechRecognitionLike | null>(null);
+  const onUtteranceRef = React.useRef(onUtterance);
+  onUtteranceRef.current = onUtterance;
+
+  React.useEffect(() => {
+    setSupported(getSpeechRecognitionCtor() !== null);
+  }, []);
+
+  React.useEffect(() => {
+    if (!enabled) {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+      setListening(false);
+      return;
+    }
+
+    const Ctor = getSpeechRecognitionCtor();
+    if (!Ctor) {
+      setSupported(false);
+      setEnabled(false);
+      return;
+    }
+
+    const recognition = new Ctor();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event) => {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          const text = result[0].transcript.trim();
+          if (text) onUtteranceRef.current(text);
+        }
+      }
+    };
+    recognition.onerror = () => {
+      // Common/benign cases (no-speech, aborted) — keep listening state as-is
+      // and let onend decide whether to restart.
+    };
+    recognition.onend = () => {
+      // Browsers auto-stop recognition after a period of silence; restart
+      // automatically while the user still has voice turned on.
+      if (recognitionRef.current === recognition && enabled) {
+        try {
+          recognition.start();
+        } catch {
+          // ignore — e.g. already started
+        }
+      }
+    };
+
+    recognitionRef.current = recognition;
+    try {
+      recognition.start();
+      setListening(true);
+    } catch {
+      setListening(false);
+    }
+
+    return () => {
+      recognition.onend = null;
+      recognition.stop();
+    };
+  }, [enabled]);
 
   const toggle = React.useCallback(() => {
-    setEnabled((prev) => {
-      const next = !prev;
-      setListening(next);
-      return next;
-    });
+    setEnabled((prev) => !prev);
   }, []);
 
   const stop = React.useCallback(() => {
     setEnabled(false);
-    setListening(false);
   }, []);
 
-  return { enabled, listening, toggle, stop };
+  return { enabled, listening, supported, toggle, stop };
 }
 
 export type TedVoiceState = ReturnType<typeof useTedVoice>;
