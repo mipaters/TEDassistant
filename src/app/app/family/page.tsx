@@ -14,6 +14,7 @@ import {
   Heart,
   BellRing,
   Plus,
+  MapPin,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -143,6 +144,68 @@ function NetworkDeviceCard({
           pendingLabel="Contacting Rogers Network Care…"
           doneLabel="Anna (Rogers Network Care) applied the change"
         />
+      </CardContent>
+    </Card>
+  );
+}
+
+const childMembers = familyMembers.filter((m) => m.relationship === "Child");
+
+function LocationSharingSection({
+  statuses,
+  trigger,
+}: {
+  statuses: Record<string, "idle" | "pending" | "done">;
+  trigger: (id: string) => void;
+}) {
+  const [shared, setShared] = React.useState<Record<string, boolean>>({});
+
+  const toggle = (childId: string, enabled: boolean) => {
+    setShared((prev) => ({ ...prev, [childId]: enabled }));
+    trigger(`location-${childId}`);
+  };
+
+  return (
+    <Card>
+      <CardContent className="flex flex-col gap-3 p-5">
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-[var(--ted-blue)]" />
+          <p className="text-xs font-medium uppercase tracking-wider text-[var(--ted-blue)]">
+            Location Sharing
+          </p>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Turn on location sharing per child so you can see where their device is from the TED app, any time.
+        </p>
+        {childMembers.map((child, i) => {
+          const statusKey = `location-${child.id}`;
+          const enabled = shared[child.id] ?? false;
+          return (
+            <React.Fragment key={child.id}>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium">{child.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {enabled ? "Location sharing is on" : "Location sharing is off"}
+                  </p>
+                </div>
+                <Switch
+                  checked={enabled}
+                  onCheckedChange={(v) => toggle(child.id, v)}
+                  aria-label={`Location sharing for ${child.name}`}
+                />
+              </div>
+              {statuses[statusKey] && statuses[statusKey] !== "idle" && (
+                <ActionStatusBanner
+                  state={statuses[statusKey]}
+                  pendingLabel={`Turning location sharing ${enabled ? "on" : "off"} for ${child.name}…`}
+                  doneLabel={`Location sharing is now ${enabled ? "on" : "off"} for ${child.name}`}
+                />
+              )}
+              {i < childMembers.length - 1 && <Separator />}
+            </React.Fragment>
+          );
+        })}
       </CardContent>
     </Card>
   );
@@ -446,6 +509,10 @@ export default function FamilyPage() {
             onAction={() => trigger(d.id)}
           />
         ))}
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <LocationSharingSection statuses={statuses} trigger={trigger} />
       </div>
 
       <div className="flex flex-col gap-3">

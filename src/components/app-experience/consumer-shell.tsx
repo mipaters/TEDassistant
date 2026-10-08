@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 export function ConsumerShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { startDemo, isActive } = useDemoMode();
+  const chatActive = pathname === "/app/chat" || pathname?.startsWith("/app/chat/");
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center gap-6 bg-[radial-gradient(ellipse_at_top,_rgba(224,17,95,0.12),_transparent_60%)] px-4 pb-28 pt-6 lg:pt-10">
@@ -45,27 +46,50 @@ export function ConsumerShell({ children }: { children: React.ReactNode }) {
 
         <div className="min-h-[600px] flex-1 overflow-y-auto px-4 pb-24 pt-2">{children}</div>
 
-        <div className="absolute inset-x-0 bottom-0 flex items-center justify-around border-t border-white/10 bg-[#0b0f1a]/95 px-1 py-2.5 backdrop-blur-xl">
-          {consumerTabs.map((tab) => {
-            const Icon = tab.icon;
-            const active = pathname === tab.href || pathname?.startsWith(tab.href + "/");
-            return (
-              <Link key={tab.href} href={tab.href} className="flex flex-col items-center gap-1 px-2 py-1">
-                <Icon className={cn("h-5 w-5", active ? "text-[var(--rogers-red-bright)]" : "text-white/40")} />
-                <span className={cn("text-[10px]", active ? "text-white" : "text-white/40")}>{tab.label}</span>
-              </Link>
-            );
-          })}
+        <div className="absolute inset-x-0 bottom-0 flex items-end justify-around border-t border-white/10 bg-[#0b0f1a]/95 px-1 py-2.5 backdrop-blur-xl">
+          {consumerTabs.slice(0, 2).map((tab) => (
+            <NavTabLink key={tab.href} tab={tab} pathname={pathname} />
+          ))}
+
+          <Link
+            href="/app/chat"
+            className="relative -top-5 flex flex-col items-center gap-1 px-2"
+            aria-label="Chat with TED"
+          >
+            <span
+              className={cn(
+                "flex items-center justify-center rounded-full bg-gradient-to-br from-[var(--rogers-red-bright)] to-[var(--ted-violet)] text-white shadow-lg shadow-[rgba(224,17,95,0.45)] ring-4 ring-[#0b0f1a]",
+                chatActive && "ring-[var(--rogers-red-bright)]/60"
+              )}
+              style={{ height: "3.25rem", width: "3.25rem" }}
+            >
+              <MessageCircle className="h-6 w-6" />
+            </span>
+            <span className={cn("text-[10px]", chatActive ? "text-white" : "text-white/60")}>TED</span>
+          </Link>
+
+          {consumerTabs.slice(2).map((tab) => (
+            <NavTabLink key={tab.href} tab={tab} pathname={pathname} />
+          ))}
         </div>
       </div>
-
-      <Link
-        href="/app/chat"
-        className="fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[var(--rogers-red-bright)] to-[var(--ted-violet)] text-white shadow-lg shadow-[rgba(224,17,95,0.4)] lg:bottom-10 lg:right-10"
-        aria-label="Chat with TED"
-      >
-        <MessageCircle className="h-6 w-6" />
-      </Link>
     </div>
+  );
+}
+
+function NavTabLink({
+  tab,
+  pathname,
+}: {
+  tab: (typeof consumerTabs)[number];
+  pathname: string | null;
+}) {
+  const Icon = tab.icon;
+  const active = pathname === tab.href || pathname?.startsWith(tab.href + "/");
+  return (
+    <Link href={tab.href} className="flex flex-col items-center gap-1 px-2 py-1">
+      <Icon className={cn("h-5 w-5", active ? "text-[var(--rogers-red-bright)]" : "text-white/40")} />
+      <span className={cn("text-[10px]", active ? "text-white" : "text-white/40")}>{tab.label}</span>
+    </Link>
   );
 }
