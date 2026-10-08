@@ -49,6 +49,7 @@ export function useTedVoice(onUtterance: (text: string) => void) {
   const [listening, setListening] = React.useState(false);
   const [supported, setSupported] = React.useState(true);
   const recognitionRef = React.useRef<SpeechRecognitionLike | null>(null);
+  const suspendedRef = React.useRef(false);
   const onUtteranceRef = React.useRef(onUtterance);
   onUtteranceRef.current = onUtterance;
 
@@ -91,8 +92,10 @@ export function useTedVoice(onUtterance: (text: string) => void) {
     };
     recognition.onend = () => {
       // Browsers auto-stop recognition after a period of silence; restart
-      // automatically while the user still has voice turned on.
-      if (recognitionRef.current === recognition && enabled) {
+      // automatically while the user still has voice turned on, unless we
+      // deliberately suspended it (e.g. while TED is speaking, so the mic
+      // doesn't pick up TED's own voice and loop back as a new "question").
+      if (recognitionRef.current === recognition && enabled && !suspendedRef.current) {
         try {
           recognition.start();
         } catch {
@@ -123,7 +126,25 @@ export function useTedVoice(onUtterance: (text: string) => void) {
     setEnabled(false);
   }, []);
 
-  return { enabled, listening, supported, toggle, stop };
+  /** Temporarily stop listening (e.g. while TED's reply is being spoken aloud). */
+  const pause = React.useCallback(() => {
+    suspendedRef.current = true;
+    recognitionRef.current?.stop();
+  }, []);
+
+  /** Resume listening after a pause(), if voice input is still turned on. */
+  const resume = React.useCallback(() => {
+    suspendedRef.current = false;
+    if (enabled) {
+      try {
+        recognitionRef.current?.start();
+      } catch {
+        // ignore — e.g. already started
+      }
+    }
+  }, [enabled]);
+
+  return { enabled, listening, supported, toggle, stop, pause, resume };
 }
 
 export type TedVoiceState = ReturnType<typeof useTedVoice>;

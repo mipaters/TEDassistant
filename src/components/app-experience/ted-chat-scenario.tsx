@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, CheckCircle2, Send, Mic, MicOff, Volume2 } from "lucide-react";
+import { Sparkles, CheckCircle2, Send, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,9 @@ export function TedChatScenario() {
   const [liveMessages, setLiveMessages] = React.useState<LiveMessage[]>([]);
   const [liveLoading, setLiveLoading] = React.useState(false);
   const [speaking, setSpeaking] = React.useState(false);
+  const [speakEnabled, setSpeakEnabled] = React.useState(true);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const liveLoadingRef = React.useRef(false);
 
   const active = customPrompt ?? chatPrompts.find((p) => p.id === activeId) ?? null;
   const { visibleItems, isComplete } = useSequence(active?.tedReplies ?? [], !!active, 1100);
@@ -36,50 +38,70 @@ export function TedChatScenario() {
     .map((n) => n[0])
     .join("");
 
-  const speak = React.useCallback(async (text: string) => {
-    try {
-      const res = await fetch(`${VOICE_SERVER_URL}/api/speak`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok) return;
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      audioRef.current?.pause();
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      setSpeaking(true);
-      audio.onended = () => setSpeaking(false);
-      audio.onerror = () => setSpeaking(false);
-      await audio.play().catch(() => setSpeaking(false));
-    } catch {
-      // Best-effort — TTS is a nice-to-have on top of the text reply, which
-      // has already been shown regardless.
-    }
-  }, []);
+  const speak = React.useCallback(
+    async (text: string) => {
+      if (!speakEnabled) return;
+      voiceRef.current?.pause();
+      try {
+        const res = await fetch(`${VOICE_SERVER_URL}/api/speak`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        audioRef.current?.pause();
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        setSpeaking(true);
+        const finish = () => {
+          setSpeaking(false);
+          voiceRef.current?.resume();
+        };
+        audio.onended = finish;
+        audio.onerror = finish;
+        await audio.play().catch(finish);
+      } catch {
+        voiceRef.current?.resume();
+        // Best-effort — TTS is a nice-to-have on top of the text reply, which
+        // has already been shown regardless.
+      }
+    },
+    [speakEnabled]
+  );
 
   const sendLive = React.useCallback(
-    async (text: string, opts?: { spoken?: boolean }) => {
+    async (text: string) => {
+      // Guard against overlapping sends (e.g. a stray mic result arriving
+      // while a previous reply is still in flight) leaving the chat "stuck".
+      if (liveLoadingRef.current) return;
+      const trimmed = text.trim();
+      if (!trimmed) return;
+
       setApplied(false);
       setActiveId(null);
       setCustomPrompt(null);
-      const history = liveMessages.map((m) => ({
-        role: m.role === "ted" ? "assistant" : "user",
-        content: m.text,
-      }));
-      setLiveMessages((prev) => [...prev, { role: "user", text }]);
+      let history: { role: string; content: string }[] = [];
+      setLiveMessages((prev) => {
+        history = prev.map((m) => ({
+          role: m.role === "ted" ? "assistant" : "user",
+          content: m.text,
+        }));
+        return [...prev, { role: "user", text: trimmed }];
+      });
+      liveLoadingRef.current = true;
       setLiveLoading(true);
       try {
         const res = await fetch(`${VOICE_SERVER_URL}/api/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ history, message: text }),
+          body: JSON.stringify({ history, message: trimmed }),
         });
         if (!res.ok) throw new Error("chat request failed");
         const data = (await res.json()) as { reply: string };
         setLiveMessages((prev) => [...prev, { role: "ted", text: data.reply }]);
-        if (opts?.spoken) void speak(data.reply);
+        void speak(data.reply);
       } catch {
         setLiveMessages((prev) => [
           ...prev,
@@ -89,13 +111,16 @@ export function TedChatScenario() {
           },
         ]);
       } finally {
+        liveLoadingRef.current = false;
         setLiveLoading(false);
       }
     },
-    [liveMessages, speak]
+    [speak]
   );
 
-  const voice = useTedVoice((utterance) => sendLive(utterance, { spoken: true }));
+  const voice = useTedVoice((utterance) => sendLive(utterance));
+  const voiceRef = React.useRef(voice);
+  voiceRef.current = voice;
 
   const selectPrompt = (id: string) => {
     setApplied(false);
@@ -118,99 +143,94 @@ export function TedChatScenario() {
   };
 
   const showLiveThread = !active && liveMessages.length > 0;
+  const showSuggestions = !active && liveMessages.length === 0;
+  const hasConversation = !!active || liveMessages.length > 0;
+
+  const voiceOutputButton = (
+    <Button
+      type="button"
+      size="icon"
+      variant={speakEnabled ? "default" : "outline"}
+      aria-label={speakEnabled ? "Mute TED's voice" : "Unmute TED's voice"}
+      onClick={() => setSpeakEnabled((v) => !v)}
+    >
+      {speakEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+    </Button>
+  );
+
+  const micInputButton = (
+    <Button
+      type="button"
+      size="icon"
+      variant={voice.enabled ? "default" : "outline"}
+      aria-label={voice.enabled ? "Turn off microphone" : "Turn on microphone"}
+      disabled={!voice.supported}
+      onClick={voice.toggle}
+    >
+      {voice.enabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+    </Button>
+  );
+
+  const inputBar = (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        submitDraft();
+      }}
+      className="flex items-center gap-2"
+    >
+      <Input
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        placeholder="Ask TED anything…"
+        aria-label="Ask TED anything"
+      />
+      <Button type="submit" size="icon" aria-label="Send" disabled={liveLoading}>
+        <Send className="h-4 w-4" />
+      </Button>
+      {micInputButton}
+      {voiceOutputButton}
+    </form>
+  );
 
   return (
     <Card>
       <CardContent className="flex flex-col gap-4 p-5">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Sparkles className="h-3.5 w-3.5 text-[var(--rogers-red-bright)]" />
-          Ask TED to take care of something for you
+          Ask TED to take care of something for you — by voice or by typing
         </div>
 
-        {!active && !showLiveThread && (
-          <>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                submitDraft();
-              }}
-              className="flex items-center gap-2"
-            >
-              <Input
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder="Ask TED anything…"
-                aria-label="Ask TED anything"
-              />
-              <Button type="submit" size="icon" aria-label="Send">
-                <Send className="h-4 w-4" />
-              </Button>
-            </form>
+        {inputBar}
 
-            <button
-              type="button"
-              onClick={voice.toggle}
-              disabled={!voice.supported}
-              className={cn(
-                "flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-colors",
-                voice.enabled
-                  ? "border-[var(--rogers-red-bright)]/50 bg-[rgba(255,45,107,0.1)]"
-                  : "border-border bg-secondary/40 hover:bg-secondary/70",
-                !voice.supported && "cursor-not-allowed opacity-50"
-              )}
-            >
-              <span className="flex items-center gap-2.5">
-                <span
-                  className={cn(
-                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-                    voice.enabled
-                      ? "bg-gradient-to-br from-[var(--rogers-red-bright)] to-[var(--ted-violet)]"
-                      : "bg-secondary"
-                  )}
-                >
-                  {voice.enabled ? (
-                    <Mic className="h-4 w-4 text-white" />
-                  ) : (
-                    <MicOff className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </span>
-                <span>
-                  <span className="block font-medium">
-                    {!voice.supported
-                      ? "Voice isn't supported in this browser"
-                      : voice.enabled
-                        ? "TED's voice is on"
-                        : "Turn on TED's voice"}
-                  </span>
-                  <span className="block text-xs text-muted-foreground">
-                    {!voice.supported
-                      ? "Try Chrome or Edge, or just type below"
-                      : voice.enabled
-                        ? "Listening — talk anytime. Tap to turn off."
-                        : "Talk to TED instead of typing"}
-                  </span>
-                </span>
-              </span>
-              {voice.enabled && (
-                <span className="relative flex h-3 w-3 shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--rogers-red-bright)] opacity-75" />
-                  <span className="relative inline-flex h-3 w-3 rounded-full bg-[var(--rogers-red-bright)]" />
-                </span>
-              )}
-            </button>
+        {voice.enabled && (
+          <div className="flex items-center gap-2 text-xs text-[var(--rogers-red-bright)]">
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--rogers-red-bright)] opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--rogers-red-bright)]" />
+            </span>
+            Listening — talk anytime.
+          </div>
+        )}
+        {!voice.supported && (
+          <p className="text-xs text-muted-foreground">
+            Voice input isn&apos;t supported in this browser — try Chrome or Edge, or just type above. TED will still
+            reply out loud.
+          </p>
+        )}
 
-            <div className="flex flex-col gap-2">
-              {chatPrompts.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => selectPrompt(p.id)}
-                  className="rounded-xl border border-border bg-secondary/40 px-4 py-3 text-left text-sm transition-colors hover:bg-secondary/70"
-                >
-                  {p.prompt}
-                </button>
-              ))}
-            </div>
-          </>
+        {showSuggestions && (
+          <div className="flex flex-col gap-2">
+            {chatPrompts.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => selectPrompt(p.id)}
+                className="rounded-xl border border-border bg-secondary/40 px-4 py-3 text-left text-sm transition-colors hover:bg-secondary/70"
+              >
+                {p.prompt}
+              </button>
+            ))}
+          </div>
         )}
 
         {showLiveThread && (
@@ -260,41 +280,6 @@ export function TedChatScenario() {
                 Speaking…
               </div>
             )}
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                submitDraft();
-              }}
-              className="flex items-center gap-2"
-            >
-              <Input
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder="Ask TED anything…"
-                aria-label="Ask TED anything"
-              />
-              <Button type="submit" size="icon" aria-label="Send" disabled={liveLoading}>
-                <Send className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                size="icon"
-                variant={voice.enabled ? "default" : "outline"}
-                aria-label="Toggle voice"
-                disabled={!voice.supported}
-                onClick={voice.toggle}
-              >
-                {voice.enabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-              </Button>
-            </form>
-
-            <button
-              onClick={reset}
-              className="self-start text-xs text-muted-foreground underline underline-offset-2"
-            >
-              Ask something else
-            </button>
           </div>
         )}
 
@@ -360,16 +345,19 @@ export function TedChatScenario() {
                 </motion.div>
               )}
             </AnimatePresence>
-
-            <button
-              onClick={reset}
-              className="self-start text-xs text-muted-foreground underline underline-offset-2"
-            >
-              Ask something else
-            </button>
           </div>
+        )}
+
+        {hasConversation && (
+          <button
+            onClick={reset}
+            className="self-start text-xs text-muted-foreground underline underline-offset-2"
+          >
+            Start over
+          </button>
         )}
       </CardContent>
     </Card>
   );
 }
+
