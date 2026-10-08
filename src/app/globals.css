@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+:root {
+  --background: #05070d;
+  --foreground: #eef1f7;
+  --card: #0b0f1a;
+  --card-foreground: #eef1f7;
+  --popover: #0b0f1a;
+  --popover-foreground: #eef1f7;
+  --primary: #e0115f;
+  --primary-foreground: #ffffff;
+  --secondary: #121829;
+  --secondary-foreground: #eef1f7;
+  --muted: #121829;
+  --muted-foreground: #8e97ac;
+  --accent: #ff2d6b;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #1d2538;
+  --input: #1d2538;
+  --ring: #ff2d6b;
+  --radius: 0.9rem;
+
+  --rogers-red: #e0115f;
+  --rogers-red-bright: #ff2d6b;
+  --ted-blue: #3fa9ff;
+  --ted-cyan: #37e2d6;
+  --ted-violet: #8b7bff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-sm: calc(var(--radius) - 8px);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: radial-gradient(ellipse 80% 60% at 20% -10%, rgba(224, 17, 95, 0.18), transparent),
+    radial-gradient(ellipse 70% 50% at 100% 0%, rgba(63, 169, 255, 0.12), transparent),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #262f45;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #343f5c;
+}
+
+.glass-panel {
+  background: linear-gradient(180deg, rgba(18, 24, 41, 0.75), rgba(11, 15, 26, 0.65));
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+}
+
+.text-gradient-rogers {
+  background: linear-gradient(90deg, #ff2d6b, #e0115f 45%, #8b7bff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glow-ring {
+  box-shadow: 0 0 0 1px rgba(255, 45, 107, 0.25), 0 0 40px -10px rgba(255, 45, 107, 0.35);
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+@keyframes dash-flow {
+  to { stroke-dashoffset: -24; }
+}
+.animate-dash-flow {
+  stroke-dasharray: 6 6;
+  animation: dash-flow 1s linear infinite;
+}

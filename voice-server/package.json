@@ -1,0 +1,30 @@
+{
+  "name": "ted-voice-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Twilio Voice webhook + media-stream bridge for TED, powered by Azure AI Speech (STT/TTS) and Azure OpenAI (chat). Deployed separately from the static TED web app, which cannot host webhooks or WebSocket connections.",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "microsoft-cognitiveservices-speech-sdk": "^1.40.0",
+    "twilio": "^5.3.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.9",
+    "@types/ws": "^8.5.10",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
