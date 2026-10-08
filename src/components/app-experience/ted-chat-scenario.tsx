@@ -2,18 +2,29 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, CheckCircle2 } from "lucide-react";
+import { Sparkles, CheckCircle2, Send, Mic, MicOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useSequence } from "@/lib/use-sequence";
-import { chatPrompts } from "@/data/chat-prompts";
+import { useTedVoice } from "@/lib/use-ted-voice";
+import { chatPrompts, type ChatExchange } from "@/data/chat-prompts";
 import { customer } from "@/data/customer-data";
 import { cn } from "@/lib/utils";
 
+const genericReplies = [
+  "Let me take care of that for you…",
+  "I've noted the details of your request.",
+  "Once I'm connected to Azure OpenAI and Azure AI Speech, I'll act on this in real time and follow up here.",
+];
+
 export function TedChatScenario() {
   const [activeId, setActiveId] = React.useState<string | null>(null);
+  const [customPrompt, setCustomPrompt] = React.useState<ChatExchange | null>(null);
+  const [draft, setDraft] = React.useState("");
   const [applied, setApplied] = React.useState(false);
-  const active = chatPrompts.find((p) => p.id === activeId) ?? null;
+  const voice = useTedVoice();
+  const active = customPrompt ?? chatPrompts.find((p) => p.id === activeId) ?? null;
   const { visibleItems, isComplete } = useSequence(active?.tedReplies ?? [], !!active, 1100);
 
   const initials = customer.name
@@ -23,7 +34,22 @@ export function TedChatScenario() {
 
   const selectPrompt = (id: string) => {
     setApplied(false);
+    setCustomPrompt(null);
     setActiveId(id);
+  };
+
+  const reset = () => {
+    setActiveId(null);
+    setCustomPrompt(null);
+  };
+
+  const submitDraft = () => {
+    const text = draft.trim();
+    if (!text) return;
+    setApplied(false);
+    setActiveId(null);
+    setCustomPrompt({ id: `custom-${Date.now()}`, prompt: text, tedReplies: genericReplies });
+    setDraft("");
   };
 
   return (
@@ -35,17 +61,79 @@ export function TedChatScenario() {
         </div>
 
         {!active && (
-          <div className="flex flex-col gap-2">
-            {chatPrompts.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => selectPrompt(p.id)}
-                className="rounded-xl border border-border bg-secondary/40 px-4 py-3 text-left text-sm transition-colors hover:bg-secondary/70"
-              >
-                {p.prompt}
-              </button>
-            ))}
-          </div>
+          <>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                submitDraft();
+              }}
+              className="flex items-center gap-2"
+            >
+              <Input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder="Ask TED anything…"
+                aria-label="Ask TED anything"
+              />
+              <Button type="submit" size="icon" aria-label="Send">
+                <Send className="h-4 w-4" />
+              </Button>
+            </form>
+
+            <button
+              type="button"
+              onClick={voice.toggle}
+              className={cn(
+                "flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-colors",
+                voice.enabled
+                  ? "border-[var(--rogers-red-bright)]/50 bg-[rgba(255,45,107,0.1)]"
+                  : "border-border bg-secondary/40 hover:bg-secondary/70"
+              )}
+            >
+              <span className="flex items-center gap-2.5">
+                <span
+                  className={cn(
+                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+                    voice.enabled
+                      ? "bg-gradient-to-br from-[var(--rogers-red-bright)] to-[var(--ted-violet)]"
+                      : "bg-secondary"
+                  )}
+                >
+                  {voice.enabled ? (
+                    <Mic className="h-4 w-4 text-white" />
+                  ) : (
+                    <MicOff className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </span>
+                <span>
+                  <span className="block font-medium">
+                    {voice.enabled ? "TED's voice is on" : "Turn on TED's voice"}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {voice.enabled ? "Listening — talk anytime. Tap to turn off." : "Talk to TED instead of typing"}
+                  </span>
+                </span>
+              </span>
+              {voice.enabled && (
+                <span className="relative flex h-3 w-3 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--rogers-red-bright)] opacity-75" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-[var(--rogers-red-bright)]" />
+                </span>
+              )}
+            </button>
+
+            <div className="flex flex-col gap-2">
+              {chatPrompts.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => selectPrompt(p.id)}
+                  className="rounded-xl border border-border bg-secondary/40 px-4 py-3 text-left text-sm transition-colors hover:bg-secondary/70"
+                >
+                  {p.prompt}
+                </button>
+              ))}
+            </div>
+          </>
         )}
 
         {active && (
@@ -112,7 +200,7 @@ export function TedChatScenario() {
             </AnimatePresence>
 
             <button
-              onClick={() => setActiveId(null)}
+              onClick={reset}
               className="self-start text-xs text-muted-foreground underline underline-offset-2"
             >
               Ask something else

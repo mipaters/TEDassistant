@@ -17,8 +17,14 @@ export default function AppHomePage() {
         className="flex flex-col gap-2"
       >
         <p className="text-xs uppercase tracking-wider text-muted-foreground">Good afternoon</p>
-        <h1 className="text-2xl font-bold">
-          Hi {customer.name.split(" ")[0]}, TED has things handled.
+        <h1 className="text-2xl font-bold text-white">
+          Hi {customer.name.split(" ")[0]}, your{" "}
+          <span>
+            <span className="text-[var(--rogers-red-bright)]">T</span>rusted{" "}
+            <span className="text-[var(--rogers-red-bright)]">E</span>veryday{" "}
+            <span className="text-[var(--rogers-red-bright)]">D</span>igital Assistant
+          </span>{" "}
+          has things handled.
         </h1>
         <div className="flex w-fit items-center gap-2 rounded-full border border-border bg-black/30 px-3 py-1.5 text-[11px] text-muted-foreground">
           <ShieldCheck className="h-3 w-3 text-emerald-400" />

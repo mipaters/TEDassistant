@@ -12,8 +12,8 @@ export default function ChatPage() {
         </Badge>
         <h1 className="text-xl font-bold leading-tight">Tell TED what you need</h1>
         <p className="text-xs leading-relaxed text-muted-foreground">
-          TED can schedule service, optimize your plan, or compare providers — and take action on
-          your behalf.
+          Ask TED anything you want, type it below, or turn on voice and just talk — TED can schedule
+          service, optimize your plan, compare providers, or handle everyday requests on your behalf.
         </p>
       </div>
       <TedChatScenario />
